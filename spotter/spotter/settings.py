@@ -11,9 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-prod')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = [
-    "https://spotter-qo5cbjz9k-praveenlokkus-projects.vercel.app",
-]
+ALLOWED_HOSTS = ['*']
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
