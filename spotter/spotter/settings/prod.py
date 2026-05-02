@@ -12,14 +12,11 @@ ALLOWED_HOSTS = [
     os.getenv('PROD_HOST', ''),   # custom domain if you add one
 ]
 
-# CORS — allow Vercel frontend (filter out empty string if FRONTEND_URL not set)
-_frontend_url = os.getenv('FRONTEND_URL', '').strip()
-CORS_ALLOWED_ORIGINS = [u for u in [_frontend_url] if u]  # never include empty string
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https://.*\.vercel\.app$",   # ALL Vercel preview URLs auto-allowed
-    r"^https://.*\.railway\.app$",  # Railway-to-Railway if needed
-]
-CORS_ALLOW_CREDENTIALS = True
+# CORS — JWT is sent via Authorization header (not cookies) so ALLOW_ALL is safe.
+# django-cors-headers rule: ALLOW_ALL_ORIGINS=True requires ALLOW_CREDENTIALS=False.
+# Our JWT auth uses headers, not cookies → this works perfectly.
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = False
 
 # HTTPS enforcement (Railway always serves HTTPS)
 SECURE_SSL_REDIRECT             = False   # Railway handles SSL termination — don't redirect
