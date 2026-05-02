@@ -6,11 +6,7 @@ DEBUG = False
 
 SECRET_KEY = os.environ['SECRET_KEY']  # Crashes fast if not set in Railway
 
-ALLOWED_HOSTS = [
-    '.railway.app',
-    '.up.railway.app',
-    os.getenv('PROD_HOST', ''),   # custom domain if you add one
-]
+ALLOWED_HOSTS = ['*']
 
 # CORS — JWT is sent via Authorization header (not cookies) so ALLOW_ALL is safe.
 # django-cors-headers rule: ALLOW_ALL_ORIGINS=True requires ALLOW_CREDENTIALS=False.

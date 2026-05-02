@@ -14,10 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'change-me-in-production')
 
-ALLOWED_HOSTS = [
-    'localhost', '127.0.0.1',
-    '.railway.app', '.up.railway.app', '.vercel.app',
-]
+ALLOWED_HOSTS = ['*']
 
 # CORS — allow all for JWT header-based auth (safe — no cookies used)
 CORS_ALLOW_ALL_ORIGINS   = True
@@ -26,7 +23,6 @@ CORS_ALLOW_CREDENTIALS   = False
 AUTH_USER_MODEL = 'users.User'
 
 INSTALLED_APPS = [
-    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,8 +37,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'spotter.middleware.ForceCORSMiddleware',   # must be FIRST — handles OPTIONS preflight
-    'corsheaders.middleware.CorsMiddleware',
+    'spotter.middleware.ForceCORSMiddleware',   # must be FIRST
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
