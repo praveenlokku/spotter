@@ -32,12 +32,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
     'users',
     'Trips',
 ]
 
 MIDDLEWARE = [
-    'spotter.middleware.ForceCORSMiddleware',   # must be FIRST
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
