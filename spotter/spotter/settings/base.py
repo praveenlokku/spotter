@@ -7,7 +7,6 @@ import dj_database_url
 from dotenv import load_dotenv
 import os
 from datetime import timedelta
-import sentry_sdk
 
 load_dotenv()
 
@@ -20,12 +19,9 @@ ALLOWED_HOSTS = [
     '.railway.app', '.up.railway.app', '.vercel.app',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
-CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://.*\.vercel\.app$"]
-CORS_ALLOW_CREDENTIALS = True
+# CORS — allow all for JWT header-based auth (safe — no cookies used)
+CORS_ALLOW_ALL_ORIGINS   = True
+CORS_ALLOW_CREDENTIALS   = False
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -45,6 +41,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'spotter.middleware.ForceCORSMiddleware',   # must be FIRST — handles OPTIONS preflight
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -160,14 +157,18 @@ if _redis_available:
 else:
     CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}}
 
-# Sentry error tracking
+# Sentry error tracking (optional)
 _sentry_dsn = os.getenv('SENTRY_DSN', '')
 if _sentry_dsn:
-    sentry_sdk.init(
-        dsn=_sentry_dsn,
-        traces_sample_rate=0.2,
-        profiles_sample_rate=0.1,
-    )
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=_sentry_dsn,
+            traces_sample_rate=0.2,
+            profiles_sample_rate=0.1,
+        )
+    except ImportError:
+        pass
 
 # OpenRouteService routing (falls back to OSRM if not set)
 ORS_API_KEY = os.getenv('ORS_API_KEY', '')
