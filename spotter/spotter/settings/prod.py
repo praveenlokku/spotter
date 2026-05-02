@@ -12,12 +12,12 @@ ALLOWED_HOSTS = [
     os.getenv('PROD_HOST', ''),   # custom domain if you add one
 ]
 
-# CORS — allow your Vercel frontend (and any preview deployments)
-CORS_ALLOWED_ORIGINS = [
-    os.getenv('FRONTEND_URL', ''),   # e.g. https://spotter-eld.vercel.app
-]
+# CORS — allow Vercel frontend (filter out empty string if FRONTEND_URL not set)
+_frontend_url = os.getenv('FRONTEND_URL', '').strip()
+CORS_ALLOWED_ORIGINS = [u for u in [_frontend_url] if u]  # never include empty string
 CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https://.*\.vercel\.app$",    # all Vercel preview URLs
+    r"^https://.*\.vercel\.app$",   # ALL Vercel preview URLs auto-allowed
+    r"^https://.*\.railway\.app$",  # Railway-to-Railway if needed
 ]
 CORS_ALLOW_CREDENTIALS = True
 
