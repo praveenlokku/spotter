@@ -1,5 +1,8 @@
 from django.core.mail import send_mail
 from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def send_otp_email(email: str, code: str, purpose: str):
@@ -25,6 +28,14 @@ If you did not request this code, please ignore this email.
 — The Spotter ELD Team
 """.strip()
 
+    # ALWAYS print to console for easy debugging in Railway logs
+    # This ensures you can find your OTP even if email fails
+    print("\n" + "="*40)
+    print(f"OTP FOR: {email}")
+    print(f"PURPOSE: {purpose}")
+    print(f"CODE   : {code}")
+    print("="*40 + "\n")
+
     try:
         send_mail(
             subject=subject,
@@ -34,5 +45,5 @@ If you did not request this code, please ignore this email.
             fail_silently=False,
         )
     except Exception as e:
-        # Log but don't crash — during dev the console backend will print it
-        print(f"[OTP EMAIL ERROR] Could not send OTP to {email}: {e}")
+        # The print above ensures we still see the code even if email fails
+        logger.error(f"Email failed to {email}: {e}")

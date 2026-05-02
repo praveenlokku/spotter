@@ -60,6 +60,7 @@ def SignupView(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def LoginView(request):
+    """Login with Email + Password (returns tokens immediately)."""
     email = request.data.get('email', '').strip().lower()
     password = request.data.get('password', '')
 
@@ -83,6 +84,34 @@ def LoginView(request):
             'next': 'verify-otp',
             'purpose': 'signup',
         }, status=403)
+
+    # SUCCESS: Return tokens immediately (Skip OTP if password is provided)
+    refresh = RefreshToken.for_user(user)
+    return Response({
+        'message': 'Login successful.',
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'role': user.role,
+        }
+    }, status=200)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def SendLoginOTPView(request):
+    """Request a login OTP (without needing a password)."""
+    email = request.data.get('email', '').strip().lower()
+    if not email:
+        return Response({'error': 'Email is required.'}, status=400)
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response({'error': 'No account found with this email.'}, status=404)
 
     _create_and_send_otp(user, OTPCode.PURPOSE_LOGIN)
     return Response({

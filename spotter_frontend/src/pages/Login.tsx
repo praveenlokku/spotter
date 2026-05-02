@@ -4,6 +4,7 @@ import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 
 type Stage = 'creds' | 'otp';
+type Mode = 'password' | 'otp';
 
 const FEATURES = [
   'HOS-compliant route planning',
@@ -16,6 +17,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [stage, setStage] = useState<Stage>('creds');
+  const [mode, setMode] = useState<Mode>('password');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [digits, setDigits] = useState(['','','','','','']);
@@ -29,8 +31,15 @@ const Login = () => {
   const handleCreds = async (e: React.FormEvent) => {
     e.preventDefault(); setError(''); setLoading(true);
     try {
-      const r = await api.post('/api/users/login/', { email, password });
-      setInfo(r.data.message); setStage('otp');
+      if (mode === 'password') {
+        const r = await api.post('/api/users/login/', { email, password });
+        // Password login returns tokens immediately now
+        login(r.data.user, r.data.access, r.data.refresh);
+        navigate('/planner');
+      } else {
+        const r = await api.post('/api/users/send-login-otp/', { email });
+        setInfo(r.data.message); setStage('otp');
+      }
     } catch (err: any) {
       const d = err.response?.data;
       if (d?.next === 'verify-otp') { setInfo(d.message); setStage('otp'); }
@@ -95,7 +104,8 @@ const Login = () => {
           <p style={{ fontSize: '0.78rem', color: 'var(--t3)', marginBottom: '0.5rem' }}>WELCOME BACK</p>
           <h1 className="auth-form-title">Sign in to Spotter</h1>
           <p className="auth-form-sub">
-            {stage === 'creds' ? 'Enter your credentials to continue.' : `Check ${email} for a 6-digit code.`}
+            {stage === 'otp' ? `Check ${email} for a 6-digit code.` : 
+             mode === 'password' ? 'Enter your credentials to continue.' : 'We will send a login code to your email.'}
           </p>
 
           {error && <div className="alert alert-error mb-2">⚠ {error}</div>}
@@ -109,15 +119,27 @@ const Login = () => {
                   placeholder="driver@company.com" value={email}
                   onChange={e => setEmail(e.target.value)} required autoFocus />
               </div>
-              <div className="form-group">
-                <label className="form-label">Password</label>
-                <input id="login-password" className="form-input" type="password"
-                  placeholder="Your password" value={password}
-                  onChange={e => setPassword(e.target.value)} required />
-              </div>
+              
+              {mode === 'password' && (
+                <div className="form-group">
+                  <label className="form-label">Password</label>
+                  <input id="login-password" className="form-input" type="password"
+                    placeholder="Your password" value={password}
+                    onChange={e => setPassword(e.target.value)} required />
+                </div>
+              )}
+
               <button id="login-submit" className="btn btn-primary btn-lg w-full" type="submit" disabled={loading} style={{ marginTop: '0.25rem' }}>
-                {loading ? <><span className="spinner" /> Sending OTP…</> : 'Continue →'}
+                {loading ? <><span className="spinner" /> {mode === 'password' ? 'Signing in...' : 'Sending OTP...'}</> : 
+                 mode === 'password' ? 'Sign In →' : 'Send Login Code →'}
               </button>
+
+              <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                <button type="button" className="btn btn-ghost btn-sm"
+                  onClick={() => { setMode(mode === 'password' ? 'otp' : 'password'); setError(''); setInfo(''); }}>
+                  {mode === 'password' ? 'Login with OTP instead' : 'Login with password instead'}
+                </button>
+              </div>
             </form>
           ) : (
             <form className="auth-form-body" onSubmit={handleOtp}>
@@ -141,7 +163,7 @@ const Login = () => {
               </button>
               <button type="button" className="btn btn-ghost w-full btn-sm"
                 onClick={() => { setStage('creds'); setDigits(['','','','','','']); setError(''); setInfo(''); }}>
-                ← Use different email
+                ← Back to login options
               </button>
             </form>
           )}

@@ -1,19 +1,17 @@
 from pathlib import Path
 import dj_database_url
-from dotenv import load_dotenv
 import os
 from datetime import timedelta
 
-load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+from dotenv import load_dotenv
+load_dotenv(BASE_DIR / '.env')
 
 # Security
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-prod')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = [
-    "https://spotter-qo5cbjz9k-praveenlokkus-projects.vercel.app",
-]
+ALLOWED_HOSTS = ['*']
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
@@ -82,6 +80,10 @@ DATABASES = {
     )
 }
 
+# Add connection timeout to prevent hangs
+if DATABASES['default'].get('ENGINE') == 'django.db.backends.postgresql':
+    DATABASES['default'].setdefault('OPTIONS', {})['connect_timeout'] = 10
+
 # Auth
 AUTH_USER_MODEL = 'users.User'
 
@@ -105,23 +107,29 @@ SIMPLE_JWT = {
 OTP_EXPIRY_MINUTES = 10
 
 # Email
+EMAIL_TIMEOUT = 10  # Seconds (Global timeout to prevent hangs)
 _email_pw = os.getenv('EMAIL_HOST_PASSWORD', '')
-if _email_pw:
+
+# Use console backend ONLY if password is missing
+# (This allows testing real emails in local dev if you have a password in .env)
+if not _email_pw:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    print("[DEBUG] Using CONSOLE email backend (Password missing)")
+else:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    print(f"[DEBUG] Using SMTP email backend (User: {os.getenv('EMAIL_HOST_USER')})")
     EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
     EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
     EMAIL_USE_TLS = True
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'pravipraveenlokku@gmail.com')
     EMAIL_HOST_PASSWORD = _email_pw
-else:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Spotter ELD <pravipraveenlokku@gmail.com>')
 
 # Static files
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
