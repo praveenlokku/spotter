@@ -6,8 +6,7 @@ ENV DJANGO_ENV=production
 
 WORKDIR /app
 
-# Only what ReportLab + psycopg2 actually need
-# (WeasyPrint removed — we use ReportLab for PDFs)
+# System deps for psycopg2 (ReportLab is pure Python — no extra deps needed)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
@@ -18,7 +17,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN python manage.py collectstatic --noinput
-
+# NOTE: collectstatic runs at container START (not build time)
+# because SECRET_KEY and DATABASE_URL are only available at runtime.
 EXPOSE 8000
-CMD ["gunicorn", "spotter.wsgi:application", "--bind", "0.0.0.0:$PORT", "--workers", "2", "--timeout", "120"]
+
+# At startup: migrate → collectstatic → start gunicorn
+CMD python manage.py migrate --noinput && \
+    python manage.py collectstatic --noinput && \
+    gunicorn spotter.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
