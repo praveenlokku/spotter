@@ -111,16 +111,18 @@ EMAIL_TIMEOUT = 10  # Seconds (Global timeout to prevent hangs)
 _email_pw = os.getenv('EMAIL_HOST_PASSWORD', '')
 
 # Use console backend ONLY if password is missing
-# (This allows testing real emails in local dev if you have a password in .env)
 if not _email_pw:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     print("[DEBUG] Using CONSOLE email backend (Password missing)")
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    print(f"[DEBUG] Using SMTP email backend (User: {os.getenv('EMAIL_HOST_USER')})")
+    # Port 465 (SSL) is often more reliable in cloud environments than 587 (TLS)
     EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-    EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-    EMAIL_USE_TLS = True
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', 465))
+    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False') == 'True'
+    EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'True') == 'True'
+    
+    print(f"[DEBUG] Using SMTP email backend (User: {os.getenv('EMAIL_HOST_USER')} Port: {EMAIL_PORT})")
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'pravipraveenlokku@gmail.com')
     EMAIL_HOST_PASSWORD = _email_pw
 
