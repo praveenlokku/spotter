@@ -1,0 +1,29 @@
+Django>=4.2,<5.0
+djangorestframework>=3.14
+django-cors-headers>=4.0
+djangorestframework-simplejwt>=5.3
+psycopg2-binary>=2.9
+dj-database-url>=2.0
+python-dotenv>=1.0
+requests>=2.31
+pyotp>=2.9
+whitenoise>=6.6
+gunicorn>=21.0
+
+# Extended HOS & PDF
+reportlab>=4.0
+weasyprint>=60.0
+
+# Security
+django-ratelimit>=4.1
+sentry-sdk[django]>=1.40
+
+# Caching & async (optional Redis)
+django-redis>=5.4
+celery[redis]>=5.3
+redis>=5.0
+
+# Utilities
+Pillow>=10.0
+sentry_sdk
+reportlab

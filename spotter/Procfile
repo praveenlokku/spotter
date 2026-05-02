@@ -1,0 +1,5 @@
+# Railway runs this to start the web server
+web: gunicorn spotter.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --log-level info
+
+# Railway runs this BEFORE starting (runs migrations on every deploy)
+release: python manage.py migrate --noinput

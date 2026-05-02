@@ -1,0 +1,90 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: test_spotter
+          POSTGRES_USER: spotter
+          POSTGRES_PASSWORD: spotter
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          cd spotter
+          pip install -r requirements.txt
+
+      - name: Run Django checks
+        env:
+          DJANGO_ENV: local
+          DATABASE_URL: postgresql://spotter:spotter@localhost:5432/test_spotter
+          SECRET_KEY: ci-test-secret-key
+          DEBUG: 'True'
+        run: |
+          cd spotter
+          python manage.py check
+          python manage.py migrate
+          python manage.py test --verbosity=2
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: spotter_frontend/package-lock.json
+
+      - name: Install and build
+        run: |
+          cd spotter_frontend
+          npm ci
+          npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: spotter_frontend/dist
+
+  deploy:
+    name: Deploy (main only)
+    needs: [backend-test, frontend-build]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Deploy backend to Railway
+        run: echo "Add railway CLI deploy command here after Railway is configured"
+      
+      - name: Deploy frontend to Vercel
+        run: echo "Add vercel CLI deploy command here after Vercel is configured"
