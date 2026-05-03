@@ -33,12 +33,10 @@ const Login = () => {
     try {
       if (mode === 'password') {
         const r = await api.post('/api/users/login/', { email, password });
-        // Password login returns tokens immediately now
         login(r.data.user, r.data.access, r.data.refresh);
         navigate('/planner');
       } else {
-        const r = await api.post('/api/users/send-login-otp/', { email });
-        setInfo(r.data.message); setStage('otp');
+        setError('OTP Login is part of our upcoming Security Suite. Coming very soon!');
       }
     } catch (err: any) {
       const d = err.response?.data;
