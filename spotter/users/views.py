@@ -46,14 +46,19 @@ def SignupView(request):
         return Response({'error': 'This username is already taken.'}, status=400)
 
     user = User.objects.create_user(
-        username=username, email=email, password=password, is_verified=False
+        username=username, email=email, password=password, is_verified=True
     )
-    _create_and_send_otp(user, OTPCode.PURPOSE_SIGNUP)
+    refresh = RefreshToken.for_user(user)
     return Response({
-        'message': 'Account created. A 6-digit OTP has been sent to your email.',
-        'email': email,
-        'next': 'verify-otp',
-        'purpose': 'signup',
+        'message': 'Signup successful.',
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'role': user.role,
+        }
     }, status=201)
 
 
@@ -75,15 +80,7 @@ def LoginView(request):
     if not user.check_password(password):
         return Response({'error': 'Incorrect password.'}, status=401)
 
-    if not user.is_verified:
-        _create_and_send_otp(user, OTPCode.PURPOSE_SIGNUP)
-        return Response({
-            'error': 'Email not verified.',
-            'message': 'A new OTP has been sent to your email to complete verification.',
-            'email': email,
-            'next': 'verify-otp',
-            'purpose': 'signup',
-        }, status=403)
+    # SUCCESS: Return tokens immediately (Skip OTP stage)
 
     # SUCCESS: Return tokens immediately (Skip OTP if password is provided)
     refresh = RefreshToken.for_user(user)

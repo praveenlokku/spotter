@@ -26,7 +26,8 @@ const Signup = () => {
     setError(''); setLoading(true);
     try {
       const r = await api.post('/api/users/signup/', { username, email, password });
-      setInfo(r.data.message); setStage('otp');
+      login(r.data.access, r.data.refresh, r.data.user);
+      navigate('/planner');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Signup failed.');
     } finally { setLoading(false); }
