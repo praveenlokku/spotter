@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 type Stage = 'creds' | 'otp';
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [stage, setStage] = useState<Stage>('creds');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -26,7 +28,7 @@ const Signup = () => {
     setError(''); setLoading(true);
     try {
       const r = await api.post('/api/users/signup/', { username, email, password });
-      login(r.data.access, r.data.refresh, r.data.user);
+      login(r.data.user, r.data.access, r.data.refresh);
       navigate('/planner');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Signup failed.');
